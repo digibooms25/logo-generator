@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogoGallery } from '@/components';
+import { LogoGallery, NavigationHeader } from '@/components';
+import { navigationConfigs } from '@/components/NavigationHeader';
 import { LocalStorageService, type StoredLogoFile } from '@/services/local-storage';
 
 export default function GalleryPage() {
@@ -40,10 +41,13 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Navigation Header */}
+      <NavigationHeader {...navigationConfigs.gallery()} />
+
       <div className="container mx-auto px-4 py-8 lg:py-12">
         <div className="text-center mb-8 lg:mb-12">
           <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Logo Gallery
+            Discover Inspiration
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Browse through our collection of beautiful logos. Click on any logo to use it as inspiration for your new creation.

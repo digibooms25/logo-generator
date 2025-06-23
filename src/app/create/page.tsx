@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Sparkles, Building, Palette, Download, X, Eye } from 'lucide-react';
+import { NavigationHeader, ProgressSteps } from '@/components';
+import { navigationConfigs } from '@/components/NavigationHeader';
+import { progressConfigs } from '@/components/ProgressSteps';
 import { LocalStorageService, type StoredLogoFile } from '@/services/local-storage';
 
 export default function CreatePage() {
@@ -102,30 +105,8 @@ export default function CreatePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/"
-                className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to Home
-              </Link>
-              <div className="h-6 border-l border-gray-300"></div>
-              <h1 className="text-xl font-semibold text-gray-900">Create Logo</h1>
-            </div>
-            <Link
-              href="/gallery"
-              className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Browse Gallery
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Navigation Header */}
+      <NavigationHeader {...navigationConfigs.create(!!selectedInspiration)} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Inspiration Banner */}
@@ -179,49 +160,12 @@ export default function CreatePage() {
 
         {/* Progress Steps */}
         <div className="mb-8">
-          <div className="flex items-center justify-center space-x-8">
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-indigo-600 text-white rounded-full text-sm font-medium">
-                1
-              </div>
-              <span className="ml-2 text-sm font-medium text-indigo-600">Business Info</span>
-            </div>
-            
-            <div className="w-16 h-0.5 bg-gray-300"></div>
-            
-            <div className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-                selectedInspiration 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-300 text-gray-600'
-              }`}>
-                {selectedInspiration ? '✓' : '2'}
-              </div>
-              <span className={`ml-2 text-sm font-medium ${
-                selectedInspiration ? 'text-green-600' : 'text-gray-500'
-              }`}>
-                Inspiration {selectedInspiration ? '✓' : ''}
-              </span>
-            </div>
-            
-            <div className="w-16 h-0.5 bg-gray-300"></div>
-            
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-gray-300 text-gray-600 rounded-full text-sm font-medium">
-                3
-              </div>
-              <span className="ml-2 text-sm font-medium text-gray-500">Generate</span>
-            </div>
-            
-            <div className="w-16 h-0.5 bg-gray-300"></div>
-            
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-gray-300 text-gray-600 rounded-full text-sm font-medium">
-                4
-              </div>
-              <span className="ml-2 text-sm font-medium text-gray-500">Customize</span>
-            </div>
-          </div>
+          <ProgressSteps 
+            steps={progressConfigs.logoCreation('business-info', !!selectedInspiration)}
+            currentStepId="business-info"
+            variant="horizontal"
+            className="max-w-3xl mx-auto"
+          />
         </div>
 
         {/* Step 1: Business Information */}

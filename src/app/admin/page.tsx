@@ -7,6 +7,8 @@ import AdminAuth from '../../components/AdminAuth';
 import LogoUpload from '../../components/LogoUpload';
 import SVGIconUpload from '../../components/SVGIconUpload';
 import AdminDashboard from '../../components/AdminDashboard';
+import { NavigationHeader } from '@/components';
+import { navigationConfigs } from '@/components/NavigationHeader';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,39 +47,8 @@ export default function AdminPage() {
   // Show admin panel if authenticated
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/"
-                className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to Home
-              </Link>
-              <div className="h-6 border-l border-gray-300"></div>
-              <h1 className="text-xl font-semibold text-gray-900">Admin Panel</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/gallery"
-                className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                View Gallery
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Navigation Header */}
+      <NavigationHeader {...navigationConfigs.admin()} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Success Notice */}
