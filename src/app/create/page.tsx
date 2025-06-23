@@ -1,7 +1,105 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Sparkles, Building, Palette, Download } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Building, Palette, Download, X, Eye } from 'lucide-react';
+import { LocalStorageService, type StoredLogoFile } from '@/services/local-storage';
 
 export default function CreatePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [selectedInspiration, setSelectedInspiration] = useState<StoredLogoFile | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    companyName: '',
+    industry: '',
+    businessType: '',
+    brandDescription: '',
+    targetAudience: '',
+    stylePreferences: [] as string[],
+    colorPreferences: [] as string[]
+  });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    // Check if we have inspiration parameter and load selected logo
+    const hasInspiration = searchParams.get('inspiration') === 'true';
+    
+    if (hasInspiration && typeof window !== 'undefined') {
+      try {
+        const storageService = LocalStorageService.getInstance();
+        const inspiration = storageService.getSelectedLogo();
+        if (inspiration) {
+          setSelectedInspiration(inspiration);
+          // Pre-fill form based on inspiration
+          setFormData(prev => ({
+            ...prev,
+            industry: inspiration.category || '',
+            stylePreferences: inspiration.style ? [inspiration.style] : []
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load inspiration:', error);
+      }
+    }
+  }, [isMounted, searchParams]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleCheckboxChange = (field: 'stylePreferences' | 'colorPreferences', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field].includes(value)
+        ? prev[field].filter(item => item !== value)
+        : [...prev[field], value]
+    }));
+  };
+
+  const removeInspiration = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        const storageService = LocalStorageService.getInstance();
+        storageService.clearSelectedLogo();
+        setSelectedInspiration(null);
+        // Update URL to remove inspiration parameter
+        router.replace('/create');
+      }
+    } catch (error) {
+      console.error('Failed to remove inspiration:', error);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Handle form submission for AI generation
+    console.log('Form data:', formData);
+    console.log('Selected inspiration:', selectedInspiration);
+    
+    // For now, just show a placeholder
+    alert('AI generation feature coming soon! This will generate logos based on your input.');
+  };
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -30,6 +128,55 @@ export default function CreatePage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Inspiration Banner */}
+        {selectedInspiration && (
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-6 mb-8">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <img
+                    src={selectedInspiration.dataUrl}
+                    alt={selectedInspiration.file.name}
+                    className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white"
+                  />
+                </div>
+                <div className="flex-grow">
+                  <h3 className="text-lg font-semibold text-indigo-900 mb-1">
+                    ✨ Using as Inspiration
+                  </h3>
+                  <p className="text-indigo-700 mb-2">
+                    {selectedInspiration.file.name}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedInspiration.category && (
+                      <span className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">
+                        {selectedInspiration.category}
+                      </span>
+                    )}
+                    {selectedInspiration.style && (
+                      <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                        {selectedInspiration.style}
+                      </span>
+                    )}
+                    {selectedInspiration.keywords?.slice(0, 3).map((keyword) => (
+                      <span key={keyword} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={removeInspiration}
+                className="flex-shrink-0 p-1 text-indigo-400 hover:text-indigo-600 transition-colors"
+                title="Remove inspiration"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-8">
@@ -43,10 +190,18 @@ export default function CreatePage() {
             <div className="w-16 h-0.5 bg-gray-300"></div>
             
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-gray-300 text-gray-600 rounded-full text-sm font-medium">
-                2
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                selectedInspiration 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-gray-300 text-gray-600'
+              }`}>
+                {selectedInspiration ? '✓' : '2'}
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-500">Inspiration</span>
+              <span className={`ml-2 text-sm font-medium ${
+                selectedInspiration ? 'text-green-600' : 'text-gray-500'
+              }`}>
+                Inspiration {selectedInspiration ? '✓' : ''}
+              </span>
             </div>
             
             <div className="w-16 h-0.5 bg-gray-300"></div>
@@ -80,7 +235,7 @@ export default function CreatePage() {
             Help our AI understand your brand by providing some basic information about your business.
           </p>
 
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Company Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -89,6 +244,8 @@ export default function CreatePage() {
               <input
                 type="text"
                 required
+                value={formData.companyName}
+                onChange={(e) => handleInputChange('companyName', e.target.value)}
                 placeholder="Enter your company name"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -101,6 +258,8 @@ export default function CreatePage() {
               </label>
               <select 
                 required
+                value={formData.industry}
+                onChange={(e) => handleInputChange('industry', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">Select your industry</option>
@@ -122,7 +281,11 @@ export default function CreatePage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Business Type
               </label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <select 
+                value={formData.businessType}
+                onChange={(e) => handleInputChange('businessType', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
                 <option value="">Select business type</option>
                 <option value="startup">Startup</option>
                 <option value="small_business">Small Business</option>
@@ -140,6 +303,8 @@ export default function CreatePage() {
               </label>
               <textarea
                 rows={4}
+                value={formData.brandDescription}
+                onChange={(e) => handleInputChange('brandDescription', e.target.value)}
                 placeholder="What does your company do? What makes it unique? What values does it represent?"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -152,6 +317,8 @@ export default function CreatePage() {
               </label>
               <input
                 type="text"
+                value={formData.targetAudience}
+                onChange={(e) => handleInputChange('targetAudience', e.target.value)}
                 placeholder="Who are your customers? (e.g., young professionals, families, businesses)"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -163,13 +330,15 @@ export default function CreatePage() {
                 Preferred Style (select all that apply)
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {['Minimalist', 'Modern', 'Classic', 'Playful', 'Professional', 'Creative', 'Bold', 'Elegant'].map((style) => (
+                {['minimalist', 'modern', 'classic', 'playful', 'professional', 'creative', 'bold', 'elegant'].map((style) => (
                   <label key={style} className="flex items-center">
                     <input
                       type="checkbox"
+                      checked={formData.stylePreferences.includes(style)}
+                      onChange={() => handleCheckboxChange('stylePreferences', style)}
                       className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{style}</span>
+                    <span className="ml-2 text-sm text-gray-700 capitalize">{style}</span>
                   </label>
                 ))}
               </div>
@@ -181,13 +350,15 @@ export default function CreatePage() {
                 Color Preferences (optional)
               </label>
               <div className="flex flex-wrap gap-3">
-                {['Blue', 'Green', 'Red', 'Purple', 'Orange', 'Black', 'Gray', 'Gold'].map((color) => (
+                {['blue', 'green', 'red', 'purple', 'orange', 'black', 'gray', 'gold'].map((color) => (
                   <label key={color} className="flex items-center">
                     <input
                       type="checkbox"
+                      checked={formData.colorPreferences.includes(color)}
+                      onChange={() => handleCheckboxChange('colorPreferences', color)}
                       className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{color}</span>
+                    <span className="ml-2 text-sm text-gray-700 capitalize">{color}</span>
                   </label>
                 ))}
               </div>
@@ -206,34 +377,11 @@ export default function CreatePage() {
                 type="submit"
                 className="flex items-center px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
               >
-                Continue to Inspiration
+                {selectedInspiration ? 'Continue to Generate' : 'Continue to Inspiration'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </button>
             </div>
           </form>
-        </div>
-
-        {/* AI Generation Preview (shown in later steps) */}
-        <div className="hidden bg-white rounded-lg shadow-sm border p-8 mt-8">
-          <div className="flex items-center mb-6">
-            <Sparkles className="h-6 w-6 text-indigo-600 mr-3" />
-            <h2 className="text-2xl font-bold text-gray-900">AI-Generated Logos</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-indigo-500 transition-colors cursor-pointer">
-                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                  <div className="text-gray-400 text-sm">Generated Logo {index}</div>
-                </div>
-                <div className="text-center">
-                  <button className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-                    Select & Customize
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
