@@ -1,0 +1,174 @@
+//curl
+curl --request POST \
+  --url https://api.bfl.ai/v1/flux-kontext-pro \
+  --header 'Content-Type: application/json' \
+  --header 'x-key: <api-key>' \
+  --data '{
+  "prompt": "ein fantastisches bild",
+  "input_image": "<string>",
+  "seed": 42,
+  "aspect_ratio": "<string>",
+  "output_format": "jpeg",
+  "webhook_url": "<string>",
+  "webhook_secret": "<string>",
+  "prompt_upsampling": false,
+  "safety_tolerance": 2
+}'
+//200
+{
+  "id": "<string>",
+  "polling_url": "<string>"
+}
+
+//422
+{
+  "detail": [
+    {
+      "loc": [
+        "<string>"
+      ],
+      "msg": "<string>",
+      "type": "<string>"
+    }
+  ]
+}
+
+
+//python 
+import requests
+
+url = "https://api.bfl.ai/v1/flux-kontext-pro"
+
+payload = {
+    "prompt": "ein fantastisches bild",
+    "input_image": "<string>",
+    "seed": 42,
+    "aspect_ratio": "<string>",
+    "output_format": "jpeg",
+    "webhook_url": "<string>",
+    "webhook_secret": "<string>",
+    "prompt_upsampling": False,
+    "safety_tolerance": 2
+}
+headers = {
+    "x-key": "<api-key>",
+    "Content-Type": "application/json"
+}
+
+response = requests.request("POST", url, json=payload, headers=headers)
+
+print(response.text)
+
+//javascript
+const options = {
+  method: 'POST',
+  headers: {'x-key': '<api-key>', 'Content-Type': 'application/json'},
+  body: '{"prompt":"ein fantastisches bild","input_image":"<string>","seed":42,"aspect_ratio":"<string>","output_format":"jpeg","webhook_url":"<string>","webhook_secret":"<string>","prompt_upsampling":false,"safety_tolerance":2}'
+};
+
+fetch('https://api.bfl.ai/v1/flux-kontext-pro', options)
+  .then(response => response.json())
+  .then(response => console.log(response))
+  .catch(err => console.error(err));
+
+  //php
+  <?php
+
+$curl = curl_init();
+
+curl_setopt_array($curl, [
+  CURLOPT_URL => "https://api.bfl.ai/v1/flux-kontext-pro",
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_ENCODING => "",
+  CURLOPT_MAXREDIRS => 10,
+  CURLOPT_TIMEOUT => 30,
+  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+  CURLOPT_CUSTOMREQUEST => "POST",
+  CURLOPT_POSTFIELDS => "{\n  \"prompt\": \"ein fantastisches bild\",\n  \"input_image\": \"<string>\",\n  \"seed\": 42,\n  \"aspect_ratio\": \"<string>\",\n  \"output_format\": \"jpeg\",\n  \"webhook_url\": \"<string>\",\n  \"webhook_secret\": \"<string>\",\n  \"prompt_upsampling\": false,\n  \"safety_tolerance\": 2\n}",
+  CURLOPT_HTTPHEADER => [
+    "Content-Type: application/json",
+    "x-key: <api-key>"
+  ],
+]);
+
+$response = curl_exec($curl);
+$err = curl_error($curl);
+
+curl_close($curl);
+
+if ($err) {
+  echo "cURL Error #:" . $err;
+} else {
+  echo $response;
+}
+
+
+// package main
+
+import (
+	"fmt"
+	"strings"
+	"net/http"
+	"io/ioutil"
+)
+
+func main() {
+
+	url := "https://api.bfl.ai/v1/flux-kontext-pro"
+
+	payload := strings.NewReader("{\n  \"prompt\": \"ein fantastisches bild\",\n  \"input_image\": \"<string>\",\n  \"seed\": 42,\n  \"aspect_ratio\": \"<string>\",\n  \"output_format\": \"jpeg\",\n  \"webhook_url\": \"<string>\",\n  \"webhook_secret\": \"<string>\",\n  \"prompt_upsampling\": false,\n  \"safety_tolerance\": 2\n}")
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("x-key", "<api-key>")
+	req.Header.Add("Content-Type", "application/json")
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	fmt.Println(res)
+	fmt.Println(string(body))
+
+}
+
+//go
+package main
+
+import (
+	"fmt"
+	"strings"
+	"net/http"
+	"io/ioutil"
+)
+
+func main() {
+
+	url := "https://api.bfl.ai/v1/flux-kontext-pro"
+
+	payload := strings.NewReader("{\n  \"prompt\": \"ein fantastisches bild\",\n  \"input_image\": \"<string>\",\n  \"seed\": 42,\n  \"aspect_ratio\": \"<string>\",\n  \"output_format\": \"jpeg\",\n  \"webhook_url\": \"<string>\",\n  \"webhook_secret\": \"<string>\",\n  \"prompt_upsampling\": false,\n  \"safety_tolerance\": 2\n}")
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("x-key", "<api-key>")
+	req.Header.Add("Content-Type", "application/json")
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	fmt.Println(res)
+	fmt.Println(string(body))
+
+}
+
+// java
+HttpResponse<String> response = Unirest.post("https://api.bfl.ai/v1/flux-kontext-pro")
+  .header("x-key", "<api-key>")
+  .header("Content-Type", "application/json")
+  .body("{\n  \"prompt\": \"ein fantastisches bild\",\n  \"input_image\": \"<string>\",\n  \"seed\": 42,\n  \"aspect_ratio\": \"<string>\",\n  \"output_format\": \"jpeg\",\n  \"webhook_url\": \"<string>\",\n  \"webhook_secret\": \"<string>\",\n  \"prompt_upsampling\": false,\n  \"safety_tolerance\": 2\n}")
+  .asString();
+
+
