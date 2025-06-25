@@ -8,7 +8,6 @@ import { Logo, LogoCategory, LogoStyle } from '../types/logo';
 // Storage keys
 const STORAGE_KEYS = {
   LOGOS: 'logo-generator-logos',
-  MY_ASSETS: 'logo-generator-my-assets', // New storage key for generated logos
   SVG_ICONS: 'logo-generator-svg-icons',
   METADATA: 'logo-generator-metadata',
   SELECTED_LOGO: 'logo-generator-selected-logo',
@@ -29,8 +28,6 @@ export interface StoredLogoFile {
   style?: LogoStyle;
   keywords?: string[];
   description?: string;
-  isGenerated?: boolean; // New field to identify generated logos
-  source?: 'gallery' | 'generated'; // New field to categorize the source
 }
 
 export interface StoredSVGIcon {
@@ -58,7 +55,6 @@ export interface StoredSVGIcon {
 
 export interface StorageMetadata {
   totalLogos: number;
-  totalMyAssets: number; // New field for generated logos count
   totalSVGIcons: number;
   lastUpdated: Date;
   storageVersion: string;
@@ -68,10 +64,6 @@ export interface StorageStats {
   totalFiles: number;
   totalSize: number;
   logos: {
-    count: number;
-    size: number;
-  };
-  myAssets: { // New stats for generated logos
     count: number;
     size: number;
   };
@@ -88,7 +80,7 @@ export interface StorageStats {
  */
 export class LocalStorageService {
   private static instance: LocalStorageService;
-  private readonly storageVersion = '1.1.0'; // Updated version for new features
+  private readonly storageVersion = '1.0.0';
 
   private constructor() {
     this.initializeStorage();
@@ -114,16 +106,12 @@ export class LocalStorageService {
       if (!localStorage.getItem(STORAGE_KEYS.LOGOS)) {
         localStorage.setItem(STORAGE_KEYS.LOGOS, JSON.stringify([]));
       }
-      if (!localStorage.getItem(STORAGE_KEYS.MY_ASSETS)) {
-        localStorage.setItem(STORAGE_KEYS.MY_ASSETS, JSON.stringify([]));
-      }
       if (!localStorage.getItem(STORAGE_KEYS.SVG_ICONS)) {
         localStorage.setItem(STORAGE_KEYS.SVG_ICONS, JSON.stringify([]));
       }
       if (!localStorage.getItem(STORAGE_KEYS.METADATA)) {
         const metadata: StorageMetadata = {
           totalLogos: 0,
-          totalMyAssets: 0,
           totalSVGIcons: 0,
           lastUpdated: new Date(),
           storageVersion: this.storageVersion,
@@ -160,12 +148,10 @@ export class LocalStorageService {
   private updateMetadata(): void {
     try {
       const logos = this.getAllLogos();
-      const myAssets = this.getMyAssets();
       const svgIcons = this.getAllSVGIcons();
       
       const metadata: StorageMetadata = {
         totalLogos: logos.length,
-        totalMyAssets: myAssets.length,
         totalSVGIcons: svgIcons.length,
         lastUpdated: new Date(),
         storageVersion: this.storageVersion,
@@ -177,10 +163,10 @@ export class LocalStorageService {
     }
   }
 
-  // === GALLERY LOGO OPERATIONS ===
+  // === LOGO OPERATIONS ===
 
   /**
-   * Save a gallery logo file to local storage
+   * Save a logo file to local storage
    */
   public async saveLogo(
     file: File, 
@@ -199,8 +185,6 @@ export class LocalStorageService {
         },
         dataUrl,
         uploadedAt: new Date(),
-        source: 'gallery',
-        isGenerated: false,
         ...metadata,
       };
 
@@ -218,152 +202,51 @@ export class LocalStorageService {
   }
 
   /**
-   * Get all gallery logos from local storage
+   * Get all logos from local storage
    */
   public getAllLogos(): StoredLogoFile[] {
     try {
-      const stored = localStorage.getItem(STORAGE_KEYS.LOGOS);
-      if (!stored) return [];
-      
-      const logos: StoredLogoFile[] = JSON.parse(stored);
-      return logos.map(logo => ({
-        ...logo,
-        uploadedAt: new Date(logo.uploadedAt),
-      }));
-    } catch (error) {
-      console.error('Failed to load logos:', error);
-      return [];
-    }
-  }
-
-  // === MY ASSETS (GENERATED LOGOS) OPERATIONS ===
-
-  /**
-   * Save a generated logo to My Assets
-   */
-  public async saveToMyAssets(
-    file: File, 
-    metadata: Partial<Pick<StoredLogoFile, 'category' | 'style' | 'keywords' | 'description'>> = {}
-  ): Promise<StoredLogoFile> {
-    try {
-      const dataUrl = await this.fileToDataUrl(file);
-      
-      const storedLogo: StoredLogoFile = {
-        id: this.generateId(),
-        file: {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          lastModified: file.lastModified,
-        },
-        dataUrl,
-        uploadedAt: new Date(),
-        source: 'generated',
-        isGenerated: true,
-        ...metadata,
-      };
-
-      const myAssets = this.getMyAssets();
-      myAssets.push(storedLogo);
-      
-      localStorage.setItem(STORAGE_KEYS.MY_ASSETS, JSON.stringify(myAssets));
-      this.updateMetadata();
-      
-      return storedLogo;
-    } catch (error) {
-      console.error('Failed to save to My Assets:', error);
-      throw new Error('Failed to save logo to My Assets');
-    }
-  }
-
-  /**
-   * Get all generated logos from My Assets
-   */
-  public getMyAssets(): StoredLogoFile[] {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.MY_ASSETS);
-      if (!stored) return [];
-      
-      const logos: StoredLogoFile[] = JSON.parse(stored);
-      return logos.map(logo => ({
-        ...logo,
-        uploadedAt: new Date(logo.uploadedAt),
-      }));
-    } catch (error) {
-      console.error('Failed to load My Assets:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Delete from My Assets
-   */
-  public deleteFromMyAssets(id: string): boolean {
-    try {
-      const myAssets = this.getMyAssets();
-      const filteredAssets = myAssets.filter(asset => asset.id !== id);
-      
-      if (filteredAssets.length === myAssets.length) {
-        return false; // Logo not found
+      if (typeof window === 'undefined') {
+        return [];
       }
+      const data = localStorage.getItem(STORAGE_KEYS.LOGOS);
+      if (!data) return [];
       
-      localStorage.setItem(STORAGE_KEYS.MY_ASSETS, JSON.stringify(filteredAssets));
-      this.updateMetadata();
-      
-      return true;
+      const logos = JSON.parse(data);
+      // Convert date strings back to Date objects
+      return logos.map((logo: any) => ({
+        ...logo,
+        uploadedAt: new Date(logo.uploadedAt),
+      }));
     } catch (error) {
-      console.error('Failed to delete from My Assets:', error);
-      return false;
+      console.error('Failed to get logos:', error);
+      return [];
     }
   }
 
-  // === SHARED OPERATIONS ===
-
   /**
-   * Get a logo by ID from either gallery or My Assets
+   * Get a logo by ID
    */
   public getLogoById(id: string): StoredLogoFile | null {
-    // Check gallery first
-    const galleryLogos = this.getAllLogos();
-    let logo = galleryLogos.find(logo => logo.id === id);
-    
-    if (logo) return logo;
-    
-    // Check My Assets
-    const myAssets = this.getMyAssets();
-    logo = myAssets.find(logo => logo.id === id);
-    
-    return logo || null;
+    const logos = this.getAllLogos();
+    return logos.find(logo => logo.id === id) || null;
   }
 
   /**
-   * Update logo metadata (works for both gallery and My Assets)
+   * Update logo metadata
    */
   public updateLogo(id: string, updates: Partial<StoredLogoFile>): boolean {
     try {
-      // Try updating in gallery first
       const logos = this.getAllLogos();
-      const logoIndex = logos.findIndex(logo => logo.id === id);
+      const index = logos.findIndex(logo => logo.id === id);
       
-      if (logoIndex !== -1) {
-        logos[logoIndex] = { ...logos[logoIndex], ...updates };
-        localStorage.setItem(STORAGE_KEYS.LOGOS, JSON.stringify(logos));
-        this.updateMetadata();
-        return true;
-      }
+      if (index === -1) return false;
       
-      // Try updating in My Assets
-      const myAssets = this.getMyAssets();
-      const assetIndex = myAssets.findIndex(asset => asset.id === id);
+      logos[index] = { ...logos[index], ...updates };
+      localStorage.setItem(STORAGE_KEYS.LOGOS, JSON.stringify(logos));
+      this.updateMetadata();
       
-      if (assetIndex !== -1) {
-        myAssets[assetIndex] = { ...myAssets[assetIndex], ...updates };
-        localStorage.setItem(STORAGE_KEYS.MY_ASSETS, JSON.stringify(myAssets));
-        this.updateMetadata();
-        return true;
-      }
-      
-      return false;
+      return true;
     } catch (error) {
       console.error('Failed to update logo:', error);
       return false;
@@ -371,27 +254,22 @@ export class LocalStorageService {
   }
 
   /**
-   * Delete a logo by ID (works for both gallery and My Assets)
+   * Delete a logo by ID
    */
   public deleteLogo(id: string): boolean {
     try {
       if (typeof window === 'undefined') {
         return false;
       }
-      
-      // Try deleting from gallery first
       const logos = this.getAllLogos();
       const filteredLogos = logos.filter(logo => logo.id !== id);
       
-      if (logos.length !== filteredLogos.length) {
-        localStorage.setItem(STORAGE_KEYS.LOGOS, JSON.stringify(filteredLogos));
-        this.updateMetadata();
-        return true;
-      }
+      if (logos.length === filteredLogos.length) return false;
       
-      // Try deleting from My Assets
-      return this.deleteFromMyAssets(id);
+      localStorage.setItem(STORAGE_KEYS.LOGOS, JSON.stringify(filteredLogos));
+      this.updateMetadata();
       
+      return true;
     } catch (error) {
       console.error('Failed to delete logo:', error);
       return false;
@@ -508,7 +386,7 @@ export class LocalStorageService {
   // === SEARCH AND FILTER OPERATIONS ===
 
   /**
-   * Search gallery logos by keywords
+   * Search logos by keywords
    */
   public searchLogos(query: string, filters?: {
     category?: LogoCategory;
@@ -529,33 +407,6 @@ export class LocalStorageService {
       
       // Style filter
       const matchesStyle = !filters?.style || logo.style === filters.style;
-      
-      return matchesSearch && matchesCategory && matchesStyle;
-    });
-  }
-
-  /**
-   * Search My Assets by keywords
-   */
-  public searchMyAssets(query: string, filters?: {
-    category?: LogoCategory;
-    style?: LogoStyle;
-  }): StoredLogoFile[] {
-    const myAssets = this.getMyAssets();
-    const searchTerm = query.toLowerCase();
-    
-    return myAssets.filter(asset => {
-      // Text search
-      const matchesSearch = !query || 
-        asset.file.name.toLowerCase().includes(searchTerm) ||
-        asset.description?.toLowerCase().includes(searchTerm) ||
-        asset.keywords?.some(keyword => keyword.toLowerCase().includes(searchTerm));
-      
-      // Category filter
-      const matchesCategory = !filters?.category || asset.category === filters.category;
-      
-      // Style filter
-      const matchesStyle = !filters?.style || asset.style === filters.style;
       
       return matchesSearch && matchesCategory && matchesStyle;
     });
@@ -584,24 +435,22 @@ export class LocalStorageService {
     });
   }
 
-  // === UTILITY AND STATS OPERATIONS ===
+  // === ANALYTICS AND UTILITIES ===
 
   /**
    * Get storage statistics
    */
   public getStorageStats(): StorageStats {
     const logos = this.getAllLogos();
-    const myAssets = this.getMyAssets();
     const svgIcons = this.getAllSVGIcons();
     
     const logoSize = logos.reduce((sum, logo) => sum + logo.file.size, 0);
-    const myAssetsSize = myAssets.reduce((sum, asset) => sum + asset.file.size, 0);
-    const svgSize = svgIcons.reduce((sum, icon) => sum + icon.file.size, 0);
+    const iconSize = svgIcons.reduce((sum, icon) => sum + icon.file.size, 0);
     
     const categories: Record<string, number> = {};
     const styles: Record<string, number> = {};
     
-    [...logos, ...myAssets].forEach(logo => {
+    logos.forEach(logo => {
       if (logo.category) {
         categories[logo.category] = (categories[logo.category] || 0) + 1;
       }
@@ -610,20 +459,22 @@ export class LocalStorageService {
       }
     });
     
+    svgIcons.forEach(icon => {
+      if (icon.category) {
+        categories[icon.category] = (categories[icon.category] || 0) + 1;
+      }
+    });
+    
     return {
-      totalFiles: logos.length + myAssets.length + svgIcons.length,
-      totalSize: logoSize + myAssetsSize + svgSize,
+      totalFiles: logos.length + svgIcons.length,
+      totalSize: logoSize + iconSize,
       logos: {
         count: logos.length,
         size: logoSize,
       },
-      myAssets: {
-        count: myAssets.length,
-        size: myAssetsSize,
-      },
       svgIcons: {
         count: svgIcons.length,
-        size: svgSize,
+        size: iconSize,
       },
       categories,
       styles,
@@ -631,13 +482,10 @@ export class LocalStorageService {
   }
 
   /**
-   * Get metadata
+   * Get storage metadata
    */
   public getMetadata(): StorageMetadata | null {
     try {
-      if (typeof window === 'undefined') {
-        return null;
-      }
       const data = localStorage.getItem(STORAGE_KEYS.METADATA);
       if (!data) return null;
       
@@ -653,19 +501,16 @@ export class LocalStorageService {
   }
 
   /**
-   * Clear all data
+   * Clear all storage data
    */
   public clearAllData(): void {
     try {
-      if (typeof window === 'undefined') {
-        return;
-      }
-      Object.values(STORAGE_KEYS).forEach(key => {
-        localStorage.removeItem(key);
-      });
+      localStorage.removeItem(STORAGE_KEYS.LOGOS);
+      localStorage.removeItem(STORAGE_KEYS.SVG_ICONS);
+      localStorage.removeItem(STORAGE_KEYS.METADATA);
       this.initializeStorage();
     } catch (error) {
-      console.error('Failed to clear all data:', error);
+      console.error('Failed to clear storage:', error);
     }
   }
 
@@ -673,34 +518,30 @@ export class LocalStorageService {
    * Export all data as JSON
    */
   public exportData(): string {
-    return JSON.stringify({
+    const data = {
       logos: this.getAllLogos(),
-      myAssets: this.getMyAssets(),
       svgIcons: this.getAllSVGIcons(),
       metadata: this.getMetadata(),
-    }, null, 2);
+      exportedAt: new Date(),
+    };
+    
+    return JSON.stringify(data, null, 2);
   }
 
   /**
-   * Get storage usage information
+   * Check storage quota usage (approximate)
    */
   public getStorageUsage(): { used: number; available: number; percentage: number } {
     try {
-      if (typeof window === 'undefined') {
-        return { used: 0, available: 0, percentage: 0 };
+      let used = 0;
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          used += localStorage[key].length;
+        }
       }
       
-      // Estimate used storage
-      let used = 0;
-      Object.values(STORAGE_KEYS).forEach(key => {
-        const data = localStorage.getItem(key);
-        if (data) {
-          used += new Blob([data]).size;
-        }
-      });
-      
-      // Most browsers have 5-10MB limit for localStorage
-      const available = 10 * 1024 * 1024; // 10MB estimate
+      // Approximate localStorage limit (usually 5-10MB)
+      const available = 5 * 1024 * 1024; // 5MB estimate
       const percentage = (used / available) * 100;
       
       return { used, available, percentage };
@@ -710,11 +551,7 @@ export class LocalStorageService {
     }
   }
 
-  // === SELECTED LOGO OPERATIONS ===
-
-  /**
-   * Set selected logo
-   */
+  // Selected logo operations for inspiration
   public setSelectedLogo(logo: StoredLogoFile): void {
     try {
       if (typeof window === 'undefined') {
@@ -722,35 +559,23 @@ export class LocalStorageService {
       }
       localStorage.setItem(STORAGE_KEYS.SELECTED_LOGO, JSON.stringify(logo));
     } catch (error) {
-      console.error('Failed to set selected logo:', error);
+      console.error('Failed to save selected logo:', error);
     }
   }
 
-  /**
-   * Get selected logo
-   */
   public getSelectedLogo(): StoredLogoFile | null {
     try {
       if (typeof window === 'undefined') {
         return null;
       }
-      const data = localStorage.getItem(STORAGE_KEYS.SELECTED_LOGO);
-      if (!data) return null;
-      
-      const logo = JSON.parse(data);
-      return {
-        ...logo,
-        uploadedAt: new Date(logo.uploadedAt),
-      };
+      const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_LOGO);
+      return stored ? JSON.parse(stored) : null;
     } catch (error) {
       console.error('Failed to get selected logo:', error);
       return null;
     }
   }
 
-  /**
-   * Clear selected logo
-   */
   public clearSelectedLogo(): void {
     try {
       if (typeof window === 'undefined') {
@@ -762,3 +587,38 @@ export class LocalStorageService {
     }
   }
 }
+
+// Export singleton instance
+export const localStorageService = LocalStorageService.getInstance();
+
+// Helper functions for common operations
+export const storageHelpers = {
+  formatFileSize: (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  },
+
+  formatDate: (date: Date): string => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  },
+
+  isStorageAvailable: (): boolean => {
+    try {
+      const test = '__storage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+}; 

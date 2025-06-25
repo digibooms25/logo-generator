@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+// import Link from 'next/link';
 import { ArrowLeft, Upload, Plus, Trash2, Edit, Eye, FileImage, LogOut } from 'lucide-react';
 import AdminAuth from '../../components/AdminAuth';
 import LogoUpload from '../../components/LogoUpload';

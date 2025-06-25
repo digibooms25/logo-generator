@@ -18,7 +18,7 @@ import {
   Check,
   AlertTriangle
 } from 'lucide-react';
-import { localStorageService, StoredLogoFile, StoredSVGIcon, storageHelpers } from '../services/local-storage';
+import { LocalStorageService, StoredLogoFile, StoredSVGIcon } from '../services/local-storage';
 import { LogoCategory, LogoStyle } from '../types/logo';
 
 type ViewMode = 'grid' | 'list';
@@ -42,6 +42,7 @@ interface EditModalData {
 }
 
 export default function AdminDashboard() {
+  const localStorageService = LocalStorageService.getInstance();
   const [logos, setLogos] = useState<StoredLogoFile[]>([]);
   const [svgIcons, setSvgIcons] = useState<StoredSVGIcon[]>([]);
   const [searchQuery, setSearchQuery] = useState('');

@@ -24,3 +24,83 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Global input styling for proper contrast */
+input,
+textarea,
+select {
+  color: #1f2937 !important; /* Dark gray text for light backgrounds */
+  background-color: #ffffff !important; /* White background */
+  border: 1px solid #d1d5db !important; /* Light gray border */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important; /* Medium gray for placeholders */
+  opacity: 1 !important;
+}
+
+/* Focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important; /* Blue border on focus */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important; /* Blue glow */
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  input,
+  textarea,
+  select {
+    color: #1f2937 !important; /* Keep dark text even in dark mode for readability */
+    background-color: #f9fafb !important; /* Light gray background in dark mode */
+    border: 1px solid #9ca3af !important; /* Medium gray border */
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #6b7280 !important; /* Medium gray for placeholders */
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #60a5fa !important; /* Lighter blue in dark mode */
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1) !important;
+  }
+}
+
+/* Ensure disabled inputs are still readable */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  color: #6b7280 !important;
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  cursor: not-allowed;
+}
+
+/* File input styling */
+input[type="file"] {
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+}
+
+/* Checkbox and radio button styling */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #3b82f6 !important;
+}
+
+/* Search input styling */
+input[type="search"] {
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}

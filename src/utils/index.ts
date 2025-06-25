@@ -1,6 +1,8 @@
 // Utility exports will be added here as utilities are created
 // Example: export * from './export-handler';
 
+export * from './export-handler';
+
 export {};
 
 // File validation utilities for logo generator
